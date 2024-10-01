@@ -1,0 +1,3 @@
+source;share/pomdp-py/hook/pythonpath.ps1
+source;share/pomdp-py/hook/pythonpath.dsv
+source;share/pomdp-py/hook/pythonpath.sh

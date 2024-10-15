@@ -34,17 +34,12 @@ def generate_launch_description():
         output='screen'
     )
     
-    # Add ROS node for ref_solver_node.py in simulator folder
-    ref_solver_node = Node(
-        package='ref_pomdp_neurips23',  # Package name
-        executable='ref_solver_node',  # Executable defined in setup.py
-        output='screen'
-    )
+    
  
     # Add the Gazebo, spawn robot, and the ref_solver_node processes to the launch description
     ld.add_action(gazebo_launch)
     ld.add_action(spawn_robot)
-    ld.add_action(ref_solver_node)
+
 
     return ld
 

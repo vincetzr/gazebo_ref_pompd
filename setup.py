@@ -25,9 +25,7 @@ setup(
 
     # ROS 2 specific entry points for nodes or scripts
     entry_points={
-        'console_scripts': [
-            'ref_solver_node = ref_pomdp_neurips23.simulator.ref_solver_node:main'  
-        ],
+        
         'launch': [
             'gazebo = gazebo_ros.launch:generate_launch_description',
     	],

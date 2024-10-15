@@ -222,10 +222,7 @@
   </link>
 </model>
 
-  <include>
-    <pose>-0.7 -0.7 0.0 0 0 0</pose>
-    <uri>model://Dubin</uri>    
-  </include>
+
 
 <light name='user_point_light_0' type='point'>
       <pose frame=''>-1.75276 -1.33719 1 0 -0 0</pose>

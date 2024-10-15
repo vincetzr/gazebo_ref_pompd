@@ -35,6 +35,16 @@
       </visual>
       <gravity>0</gravity>
       <self_collide>0</self_collide>
+      <sensor name="range_sensor" type="sonar">
+        <pose>0 0 0.1 0 0 0</pose>
+  	<sonar>
+    	  <range>
+      	    <min>0.2</min>
+      	    <max>5.0</max>
+            <resolution>0.01</resolution>
+         </range>
+  	</sonar>
+      </sensor>
     </link>
   </model>
 </sdf>

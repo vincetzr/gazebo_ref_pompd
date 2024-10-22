@@ -14,6 +14,10 @@
   <depend>rclpy</depend>  <!-- ROS 2 Python client library -->
   <depend>gazebo_ros</depend>  <!-- Gazebo integration with ROS 2 (if needed) -->
 
+  <!-- ROS message types used in ref_solver_node.py -->
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  
   <!-- Your Python libraries from setup.py can also be dependencies -->
   <depend>numpy</depend>
   <depend>scipy</depend>

@@ -35,16 +35,30 @@
       </visual>
       <gravity>0</gravity>
       <self_collide>0</self_collide>
-      <sensor name="range_sensor" type="sonar">
-        <pose>0 0 0.1 0 0 0</pose>
-  	<sonar>
-    	  <range>
-      	    <min>0.2</min>
-      	    <max>5.0</max>
+      <sensor type="ray" name="lidar_sensor">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>true</visualize>
+        <update_rate>20</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>720</samples>
+              <min_angle>-0.3</min_angle>
+              <max_angle>0.3</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.05</min>
+            <max>3.0</max>
             <resolution>0.01</resolution>
-         </range>
-  	</sonar>
+          </range>
+        </ray>
+        <plugin name="gazebo_ros_laser" filename="libgazebo_ros_ray_sensor.so">
+          <topicName>/scan</topicName>
+          <frameName>lidar_frame</frameName>
+        </plugin>
       </sensor>
     </link>
   </model>
 </sdf>
+

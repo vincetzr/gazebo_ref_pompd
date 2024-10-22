@@ -2,7 +2,7 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
-from ref_solver_clean import RobotAction, RobotAgent, RefSolver, create_robot_pomdp
+from pomdp_py.algorithms.ref_solver_clean import RobotAction, RobotAgent, RefSolver, create_robot_pomdp
 
 class RefSolverNode(Node):
     def __init__(self):

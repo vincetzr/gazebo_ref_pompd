@@ -4,7 +4,7 @@ Add updated comment here.
 
 from pomdp_py.framework.basics import Action, Agent, POMDP, State, Observation,\
     ObservationModel, TransitionModel, GenerativeDistribution, PolicyModel,\
-    sample_generative_model
+    sample_generative_model, RewardModel
 from pomdp_py.framework.planner import Planner
 from pomdp_py.representations.distribution.particles import Particles
 from pomdp_py.representations.belief.particles import particle_reinvigoration

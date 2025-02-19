@@ -4,7 +4,7 @@ Add updated comment here.
 
 from pomdp_py.framework.basics import Action, Agent, POMDP, State, Observation,\
     ObservationModel, TransitionModel, GenerativeDistribution, PolicyModel,\
-    sample_generative_model, RewardModel
+    sample_generative_model
 from pomdp_py.framework.planner import Planner
 from pomdp_py.representations.distribution.particles import Particles
 from pomdp_py.representations.belief.particles import particle_reinvigoration
@@ -20,119 +20,6 @@ from tqdm import tqdm
 # TODO: Tidy up node parameters.
 # TODO: Check consistent discount_factor is being used throughout the solver.
 
-# Define a simple 2D state for the robot
-class RobotState(State):
-    def __init__(self, x, y, theta):
-        self.x = x
-        self.y = y
-        self.theta = theta
-
-    def __hash__(self):
-        return hash((self.x, self.y, self.theta))
-
-    def __eq__(self, other):
-        return self.x == other.x and self.y == other.y and self.theta == other.theta
-
-    def __str__(self):
-        return f"State(x={self.x}, y={self.y}, theta={self.theta})"
-
-# Define possible actions (move forward, turn left, turn right)
-class RobotAction(Action):
-    def __init__(self, name):
-        self.name = name
-
-    def __hash__(self):
-        return hash(self.name)
-
-    def __eq__(self, other):
-        return self.name == other.name
-
-    def __str__(self):
-        return f"Action({self.name})"
-
-# Define possible observations (observing x and y with noise)
-class RobotObservation(Observation):
-    def __init__(self, sensor_reading):
-        self.sensor_reading = sensor_reading
-
-    def __hash__(self):
-        return hash(self.sensor_reading)
-
-    def __eq__(self, other):
-        return self.sensor_reading == other.sensor_reading
-
-    def __str__(self):
-        return f"Observation({self.sensor_reading})"
-
-# Transition model: moving with a small chance of failure
-class RobotTransitionModel(TransitionModel):
-    def probability(self, next_state, state, action):
-        # Define the intended next state based on the action
-        if action.name == "move_forward":
-            intended_next = RobotState(state.x + 1, state.y, state.theta)
-        elif action.name == "turn_left":
-            intended_next = RobotState(state.x, state.y, state.theta - 90)
-        elif action.name == "turn_right":
-            intended_next = RobotState(state.x, state.y, state.theta + 90)
-        else:
-            return 0.0
-
-        # Add some uncertainty in motion: 80% chance of success, 20% chance of staying in place
-        if next_state == intended_next:
-            return 0.8
-        elif next_state == state:
-            return 0.2
-        else:
-            return 0.0
-
-# Observation model: robot gets noisy observations
-class RobotObservationModel(ObservationModel):
-    def probability(self, observation, next_state, action):
-        # Simulate noisy sensor readings: 90% correct, 10% off
-        if observation.sensor_reading == (next_state.x, next_state.y):
-            return 0.9
-        else:
-            return 0.1
-
-# Reward model: robot gets a reward for reaching a goal
-class RobotRewardModel(RewardModel):
-    def sample(self, state, action, next_state):
-        # Positive reward for reaching the goal (goal is at (10, 10))
-        if next_state == RobotState(10, 10, next_state.theta):
-            return 10  # Goal reward
-        else:
-            return -1  # Penalty for each step
-
-# Define the POMDP agent (need to change boundary accordingly)
-class RobotAgent(Agent):
-    def __init__(self, init_state):
-        # Define the possible states, actions, and observations
-        states = [RobotState(x, y, theta) for x in range(11) for y in range(11) for theta in [0, 90, 180, 270]]
-        actions = [RobotAction("move_forward"), RobotAction("turn_left"), RobotAction("turn_right")]
-        observations = [RobotObservation((x, y)) for x in range(11) for y in range(11)]
-        transition_model = RobotTransitionModel()
-        observation_model = RobotObservationModel()
-        reward_model = RobotRewardModel()
-        belief = {state: 1/len(states) for state in states}  # Uniform belief
-        
-        super().__init__(init_state, transition_model, observation_model, reward_model, actions, observations, belief)
-
-# Define the POMDP environment (need to change boundary accordingly)
-def create_robot_pomdp():
-    init_state = RobotState(0, 0, 0)  # Start at (0, 0) facing north
-    agent = RobotAgent(init_state)
-    return POMDP(agent, agent)
-
-# Simulate one step
-def simulate_step(pomdp, action):
-    agent = pomdp.agent
-    state = agent.cur_belief  # Current belief
-    next_state = agent.transition_model.sample(state, action)
-    observation = agent.observation_model.sample(next_state, action)
-    agent.update_belief(action, observation)
-    reward = agent.reward_model.sample(state, action, next_state)
-    return next_state, observation, reward
-    
 # TODO: Move to some kind of template file.
 EPSILON = 1e-20
 

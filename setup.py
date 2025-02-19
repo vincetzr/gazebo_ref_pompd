@@ -35,7 +35,8 @@ setup(
     # ROS 2 specific entry points for nodes or scripts
     entry_points={
         'console_scripts': [
-            'ref_solver_node = simulator.ref_solver_node:main',  
+            #'ref_solver_node = simulator.ref_solver_node:main',
+            'dummy = simulator.dummy:main',  
     	],
     },
     

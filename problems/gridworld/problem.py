@@ -1,8 +1,8 @@
 import numpy as np
 import pomdp_py
 
-from domain import State
-from models import PolicyModel, TransitionModel, ObservationModel, RewardModel
+from problems.gridworld.domain import State
+from problems.gridworld.models import PolicyModel, TransitionModel, ObservationModel, RewardModel
 
 
 class GridWorldProblem(pomdp_py.POMDP):

@@ -1,7 +1,7 @@
 import random
 import pomdp_py
 
-from domain import MoveAction, MoveEast, MoveSouth, MoveWest, MoveNorth, State, Observation
+from problems.gridworld.domain import MoveAction, MoveEast, MoveSouth, MoveWest, MoveNorth, State, Observation
 
 EPSILON = 1e-30  # The effective mass for a zero proboability.
 ETA = 0.1       # The likelihood of actuator failure.
@@ -49,8 +49,10 @@ class TransitionModel(pomdp_py.TransitionModel):
     def probability(self, next_state, state, action, normalized=False, **kwargs):
 
         if next_state.position not in self.grid_map.state_positions:
+            print(next_state.position)
             raise ValueError("Invalid next state position.")
         if state.position not in self.grid_map.state_positions:
+            print(state.position)
             raise ValueError("Invalid state position.")
 
         if state.terminal or state.goal or state.danger_zone:

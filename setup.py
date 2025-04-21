@@ -1,45 +1,54 @@
 from setuptools import setup
-import os
 from glob import glob
+import os
 
 package_name = 'ref_pomdp_neurips23'
 
 setup(
     name=package_name,
     version='1.0.0',
-    packages=['simulator', 'pomdp_py','pomdp_py.algorithms','pomdp_py.framework',
-    'pomdp_py.representations','pomdp_py.representations.belief','pomdp_py.representations.distribution','pomdp_py.utils','pomdp_py.visual'],
-    # Install the launch files
+    packages=[
+        'simulator',
+        'pomdp_py','pomdp_py.algorithms','pomdp_py.framework',
+        'pomdp_py.representations','pomdp_py.representations.belief',
+        'pomdp_py.representations.distribution','pomdp_py.utils',
+        'pomdp_py.visual',
+        'problems','problems.gridworld'
+    ],
     data_files=[
-        # Install marker file in the package index
-	('share/ament_index/resource_index/packages', ['resource/' + package_name]),
-        # Include our package.xml file
-        (os.path.join('share', package_name), ['package.xml']),
-        # Include all launch files.
-        (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
+        # marker for ament index
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        # package manifest
+        ('share/' + package_name, ['package.xml']),
+        # your launch files
+        ('share/' + package_name + '/launch', glob('launch/*.py')),
+
+        # ** Install Gazebo worlds **
+        ('share/' + package_name + '/simulator/worlds',
+         glob('simulator/worlds/**/*.world', recursive=True)),
+
+        # ** Install robot SDF models **
+        ('share/' + package_name + '/simulator/robots',
+         glob('simulator/robots/**/*.sdf', recursive=True)),
     ],
     install_requires=[
+        'setuptools',
         'numpy',
         'scipy',
         'tqdm',
         'matplotlib',
-        'pygame',  # for some tests
-        'opencv-python',  # for some tests
+        'pygame',
+        'opencv-python',
     ],
     zip_safe=False,
-    description='Python POMDP Library for ROS 2',
     author='Edward Kim',
     author_email='edward.kim@anu.edu.au',
-    keywords=['Partially Observable Markov Decision Process', 'POMDP'],
-    license="None",
-    # ROS 2 specific entry points for nodes or scripts
+    description='Python POMDP Library for ROS 2',
+    license='Apache-2.0',
     entry_points={
         'console_scripts': [
-            #'ref_solver_node = simulator.ref_solver_node:main',
-            'dummy = simulator.dummy:main',  
-    	],
+            'ref_solver_node = simulator.ref_solver_node:main',
+        ],
     },
-    
 )
-
 

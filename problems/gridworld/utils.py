@@ -4,7 +4,7 @@ import random
 import pomdp_py
 from datetime import datetime, timedelta
 
-from domain import State
+from problems.gridworld.domain import State
 
 
 def init_particles_belief(grid_map, init_states=None, num_particles=1000):

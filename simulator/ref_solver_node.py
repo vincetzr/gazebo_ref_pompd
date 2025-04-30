@@ -1,9 +1,11 @@
 import rclpy
 import pomdp_py
 import math
+import random
 from rclpy.node import Node
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from datetime import datetime
 
 from problems.gridworld.grid_map import GridMap
 from problems.gridworld.domain   import State
@@ -14,6 +16,7 @@ from problems.gridworld.models   import (
     ObservationModel,
     RewardModel,
 )
+from problems.gridworld.problem import GridWorldProblem
 from pomdp_py.representations.distribution.particles import Particles
 from pomdp_py.algorithms.ref_solver_clean import RefSolver
 
@@ -21,77 +24,178 @@ class RefPOMDPNode(Node):
     def __init__(self):
         super().__init__('ref_pomdp_node')
 
-        # 1) very simple 10×10 grid
-        n, m = 10, 10
-        grid_map = GridMap(n, m, obstacles=[],
-                           landmarks=[(10,10)],
-                           danger_zones=[],
-                           goals=[(n//2, m//2)])
+        # scaling for benchmarking
+        scale_param = 3
 
-        # 2) initial state & belief
-        init_pos   = (n//2, m//2)
-        init_state = State(init_pos,
-                           init_pos in grid_map.goals,
-                           init_pos in grid_map.landmarks,
-                           init_pos in grid_map.danger_zones)
-        raw_belief = init_particles_belief(grid_map,
-                                           init_states=[init_pos],
-                                           num_particles=300)
+        # ***** SMALL GRID MAP *****
+        n, m = 20, 20
+        obstacles = [
+            (2, i) for i in range(1, 4)
+        ] + [
+            (2, i) for i in range(6, 13)
+        ] + [
+            (2, i) for i in range(15, 19)
+        ] + [
+            (8, i) for i in range(1, 4)
+        ] + [
+            (10, i) for i in range(6, 13)
+        ] + [
+            (10, i) for i in range(15, 19)
+        ] + [
+            (14, i) for i in range(1, 7)
+        ] + [
+            (14, i) for i in range(11, 21)
+        ] + [
+            (j, 3) for j in range(2, 4)
+        ] + [
+            (j, 3) for j in range(5, 11)
+        ] + [
+            (j, 3) for j in range(12, 15)
+        ] + [
+            (j, 8) for j in range(14, 21)
+        ] + [
+            (j, 11) for j in range(14, 17)
+        ] + [
+            (j, 11) for j in range(19, 21)
+        ] + [
+            (j, 12) for j in range(2, 10)
+        ] + [
+            (j, 15) for j in range(2, 10)
+        ] + [
+            (j, 18) for j in range(2, 4)
+        ] + [
+            (j, 18) for j in range(5, 10)
+        ]
 
-        # 3) build POMDP
-        agent = pomdp_py.Agent(raw_belief,
-                               PolicyModel(grid_map),
-                               TransitionModel(grid_map),
-                               ObservationModel(grid_map),
-                               RewardModel(grid_map))
-        env   = pomdp_py.Environment(init_state,
-                                     TransitionModel(grid_map),
-                                     RewardModel(grid_map))
-        self.pomdp = pomdp_py.POMDP(agent, env)
+        landmarks = [
+            (15 + i, 12 + j) for i in range(3) for j in range(2)
+        ] + [
+            (18 + i, 6 + j) for i in range(3) for j in range(2)
+        ] + [
+            (12, 8), (3, 19), (1, 17), (1, 20),
+            (10, 19), (13, 20), (10, 13), (11, 15)
+        ] + [
+            (14, 10), (18, 10)
+        ]
 
-        # 4) precompute fully‐observed A★ policy
-        a_star = pomdp_py.AStar(self.pomdp)
-        self.fully_obs_policy = a_star.a_star_policy(self.pomdp.agent)
+        danger_zones = [
+            (20, 9), (20, 10)
+        ] + [
+            (6 + i, 19) for i in range(3)
+        ] + [
+            (4 + i, 4 + j) for i in range(6) for j in range(2)
+        ]
 
-        # 5) make the RefSolver
-        self.solver = RefSolver(
-            max_depth=n*3,
-            max_rollout_depth=int(n*3*1.2),
-            planning_time=1.0,
-            fully_obs_policy=self.fully_obs_policy,
-            exploration_const=0.9,
-            discount_factor=0.99
+        goals = [(16, 12), (19, 7)]
+
+        # build and scale map
+        grid_map = GridMap(n, m,
+                           obstacles,
+                           landmarks,
+                           danger_zones,
+                           goals)
+        grid_map = grid_map.scale(scale_param, scale_param)
+        grid_map.danger_zones = [
+            pos for pos in grid_map.danger_zones
+            if pos not in [(12 + i, 14 + j) for i in range(18) for j in range(2)]
+        ]
+        grid_map.obstacles = grid_map.obstacles + [
+            (6 + i, 1 + j) for i in range(3) for j in range(2)
+        ] + [
+            (24 + i, 1 + j) for i in range(3) for j in range(2)
+        ] + [
+            (42 + i, 1 + j) for i in range(3) for j in range(2)
+        ]
+
+        # ***** BENCHMARK PARAMETERS *****
+        simulations = 3000
+        planning_time = 30
+        trials = 1  
+        nsteps = 180
+        discount_factor = 0.99
+
+        # initial belief
+        init_states = [
+            (1 + i, 13 + j) for i in range(2) for j in range(3)
+        ] + [
+            (1 + i, 40 + j) for i in range(2) for j in range(3)
+        ]
+        init_belief = init_particles_belief(
+            grid_map,
+            init_states=init_states,
+            num_particles=simulations
         )
 
-        # 6) ROS pubs/subs
-        self.cmd_pub = self.create_publisher(Twist,    '/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(
-            Odometry, '/odom', self.odom_callback, 10)
+        init_pos = random.choice(init_states)
+        init_state = State(
+            init_pos,
+            init_pos in grid_map.goals,
+            init_pos in grid_map.landmarks,
+            init_pos in grid_map.danger_zones
+        )
 
+        # wrap into POMDP
+        gridworld = GridWorldProblem(
+            init_state,
+            init_belief,
+            grid_map,
+            scale_param=scale_param
+        )
+
+        r_max, r_min = 60, -30
+        R_max, R_min = 600, -300
+        rew_scale = (r_min - r_max) / (R_min - R_max)
+        rew_shift = r_max / rew_scale - R_max
+
+        print("\n\n***** PROBLEM DEFINITION *****\n")
+        gridworld.print_state()
+
+        # fully observed A* policy
+        a_star = pomdp_py.AStar(gridworld)
+        start = datetime.now()
+        a_star_policy = a_star.a_star_policy(gridworld.agent)
+        stop = datetime.now()
+        gridworld.visualise_policy(a_star_policy)
+        print("Preprocessing time fully observed policy:", stop - start)
+
+        # RefSolver instantiation
+        ref_solver = pomdp_py.RefSolver(
+            max_depth=90,
+            max_rollout_depth=180,
+            planning_time=planning_time,
+            fully_obs_policy=a_star_policy,
+            rew_shift=rew_shift,
+            rew_scale=rew_scale,
+            exploration_const=0.5,
+            discount_factor=discount_factor
+        )
+
+        # ROS pubs & subs
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.odom_sub = self.create_subscription(
+            Odometry, '/odom', self.odom_callback, 10
+        )
         self.last_action = None
         self.create_timer(0.5, self.step)
 
     def odom_callback(self, msg):
-        # convert continuous pose → discrete (flooring to cell), no extra class needed
+        # convert continuous pose -> discrete
         gx = math.floor(msg.pose.pose.position.x * 10)
         gy = math.floor(msg.pose.pose.position.y * 10)
         obs = (gx, gy)
 
         if self.last_action is not None:
-            # update belief through the Agent API
             new_belief = self.pomdp.agent.update(self.last_action, obs)
             self.pomdp.agent.belief = new_belief
-            self.pomdp.belief        = new_belief
+            self.pomdp.belief = new_belief
 
     def step(self):
-        # get a policy, pick the action for the MPE state
         policy = self.solver.plan(self.pomdp)
-        mpe    = self.pomdp.belief.mpe()
+        mpe = self.pomdp.belief.mpe()
         action = policy[mpe]
         self.last_action = action
         self.get_logger().info(f"Planning → {action}")
 
-        # convert discrete action → Twist
         tw = Twist()
         if action.name == "Move-NORTH":
             tw.linear.x = 0.1
@@ -100,12 +204,13 @@ class RefPOMDPNode(Node):
         elif action.name == "Move-EAST":
             tw.angular.z = -0.5; tw.linear.x = 0.1
         elif action.name == "Move-WEST":
-            tw.angular.z = 0.5;  tw.linear.x = 0.1
+            tw.angular.z = 0.5; tw.linear.x = 0.1
         self.cmd_pub.publish(tw)
 
         if mpe.goal:
             self.get_logger().info("Goal reached – shutting down.")
             rclpy.shutdown()
+
 
 def main():
     rclpy.init()
@@ -114,6 +219,8 @@ def main():
     node.destroy_node()
     rclpy.shutdown()
 
+
 if __name__ == '__main__':
     main()
+
 

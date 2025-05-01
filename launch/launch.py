@@ -6,7 +6,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     # ── your hard-coded paths ───────────────────────────────────────────────
-    world_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/worlds/turtle_worlds/turtlebot3_dqn_stage2.world'
+    world_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/worlds/turtle_worlds/turtlebot3_dqn_stage1.world'
     robot_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/robots/turtlebot3_burger/model.sdf'
     robot_name = 'turtlebot'
 

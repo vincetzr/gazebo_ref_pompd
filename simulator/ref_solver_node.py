@@ -135,7 +135,7 @@ class RefPOMDPNode(Node):
         )
 
         # wrap into POMDP
-        gridworld = GridWorldProblem(
+        self.gridworld = GridWorldProblem(
             init_state,
             init_belief,
             grid_map,
@@ -148,18 +148,18 @@ class RefPOMDPNode(Node):
         rew_shift = r_max / rew_scale - R_max
 
         print("\n\n***** PROBLEM DEFINITION *****\n")
-        gridworld.print_state()
+        self.gridworld.print_state()
 
         # fully observed A* policy
-        a_star = pomdp_py.AStar(gridworld)
+        a_star = pomdp_py.AStar(self.gridworld)
         start = datetime.now()
-        a_star_policy = a_star.a_star_policy(gridworld.agent)
+        a_star_policy = a_star.a_star_policy(self.gridworld.agent)
         stop = datetime.now()
-        gridworld.visualise_policy(a_star_policy)
+        self.gridworld.visualise_policy(a_star_policy)
         print("Preprocessing time fully observed policy:", stop - start)
 
         # RefSolver instantiation
-        ref_solver = pomdp_py.RefSolver(
+        self.ref_solver = pomdp_py.RefSolver(
             max_depth=90,
             max_rollout_depth=180,
             planning_time=planning_time,
@@ -179,20 +179,29 @@ class RefPOMDPNode(Node):
         self.create_timer(0.5, self.step)
 
     def odom_callback(self, msg):
-        # convert continuous pose -> discrete
-        gx = math.floor(msg.pose.pose.position.x * 10)
-        gy = math.floor(msg.pose.pose.position.y * 10)
+        # 1) read continuous world coords
+        x_world = msg.pose.pose.position.x
+        y_world = msg.pose.pose.position.y
+
+        # 2) shift so [-2.5,2.5] → [0,5.0], then scale so [0,5.0]→[0,20)
+        gx = math.floor((x_world + 2.5) / 0.25) + 1
+        gy = math.floor((y_world + 2.5) / 0.25) + 1
+
+        # 3) clamp into [1..20]
+        gx = max(1, min(20, gx))
+        gy = max(1, min(29, gy))
+        
         obs = (gx, gy)
+        
+        # print / log every time we get an observation
+        self.get_logger().info(f"Got observation: {obs}")
 
         if self.last_action is not None:
-            new_belief = self.pomdp.agent.update(self.last_action, obs)
-            self.pomdp.agent.belief = new_belief
-            self.pomdp.belief = new_belief
+            self.ref_solver.update(self.gridworld.agent, self.last_action, obs)
+
 
     def step(self):
-        policy = self.solver.plan(self.pomdp)
-        mpe = self.pomdp.belief.mpe()
-        action = policy[mpe]
+        action = self.ref_solver.plan(self.gridworld.agent)
         self.last_action = action
         self.get_logger().info(f"Planning → {action}")
 
@@ -206,10 +215,6 @@ class RefPOMDPNode(Node):
         elif action.name == "Move-WEST":
             tw.angular.z = 0.5; tw.linear.x = 0.1
         self.cmd_pub.publish(tw)
-
-        if mpe.goal:
-            self.get_logger().info("Goal reached – shutting down.")
-            rclpy.shutdown()
 
 
 def main():

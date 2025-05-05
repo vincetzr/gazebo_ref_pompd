@@ -108,7 +108,7 @@ class RefPOMDPNode(Node):
         ]
 
         # ***** BENCHMARK PARAMETERS *****
-        simulations = 3000
+        simulations = 30
         planning_time = 30
         trials = 1  
         nsteps = 180
@@ -126,7 +126,7 @@ class RefPOMDPNode(Node):
             num_particles=simulations
         )
 
-        init_pos = random.choice(init_states)
+        init_pos = (2,14)
         init_state = State(
             init_pos,
             init_pos in grid_map.goals,
@@ -164,6 +164,7 @@ class RefPOMDPNode(Node):
             max_rollout_depth=180,
             planning_time=planning_time,
             fully_obs_policy=a_star_policy,
+            fully_obs_generator=a_star,
             rew_shift=rew_shift,
             rew_scale=rew_scale,
             exploration_const=0.5,
@@ -171,12 +172,10 @@ class RefPOMDPNode(Node):
         )
 
         # ROS pubs & subs
-        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(
-            Odometry, '/odom', self.odom_callback, 10
-        )
-        self.last_action = None
-        self.create_timer(0.5, self.step)
+        self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10) 
+        #self.odom_sub = self.create_subscription(Odometry, '/odom', self.odom_callback, 1)
+        #self.last_action = None
+        self.create_timer(31, self.step)
 
     def odom_callback(self, msg):
         # 1) read continuous world coords
@@ -189,7 +188,7 @@ class RefPOMDPNode(Node):
 
         # 3) clamp into [1..20]
         gx = max(1, min(20, gx))
-        gy = max(1, min(29, gy))
+        gy = max(1, min(20, gy))
         
         obs = (gx, gy)
         
@@ -202,7 +201,7 @@ class RefPOMDPNode(Node):
 
     def step(self):
         action = self.ref_solver.plan(self.gridworld.agent)
-        self.last_action = action
+        #self.last_action = action
         self.get_logger().info(f"Planning → {action}")
 
         tw = Twist()
@@ -214,8 +213,17 @@ class RefPOMDPNode(Node):
             tw.angular.z = -0.5; tw.linear.x = 0.1
         elif action.name == "Move-WEST":
             tw.angular.z = 0.5; tw.linear.x = 0.1
+            
+        # Publish action
         self.cmd_pub.publish(tw)
+        
+        # Stop robot after 1 second
+        self.create_timer(1.0, self.stop_robot)
 
+    def stop_robot(self):
+        stop_twist = Twist()  # All zero
+        self.cmd_pub.publish(stop_twist)
+        stop_timer.cancel()
 
 def main():
     rclpy.init()

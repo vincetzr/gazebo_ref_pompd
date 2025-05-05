@@ -6,7 +6,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     # ── your hard-coded paths ───────────────────────────────────────────────
-    world_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/worlds/turtle_worlds/turtlebot3_dqn_stage1.world'
+    world_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/worlds/nav1.world'
     robot_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/robots/turtlebot3_burger/model.sdf'
     robot_name = 'turtlebot'
 
@@ -43,7 +43,7 @@ def generate_launch_description():
                     'ros2', 'run', 'gazebo_ros', 'spawn_entity.py',
                     '-entity', robot_name,
                     '-file',   robot_file,
-                    '-x', '0', '-y', '0', '-z', '0', '-Y', '0'
+                    '-x', '1', '-y', '1', '-z', '0', '-Y', '0'
                 ],
                 output='screen',
                 additional_env=env

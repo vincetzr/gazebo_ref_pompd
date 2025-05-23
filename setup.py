@@ -48,6 +48,8 @@ setup(
     entry_points={
         'console_scripts': [
             'ref_solver_node = simulator.ref_solver_node:main',
+            'testnode = simulator.testnode:main',
+		
         ],
     },
 )

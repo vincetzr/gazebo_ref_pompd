@@ -1,20 +1,16 @@
 import os
-
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess, TimerAction
+from launch.actions import ExecuteProcess, TimerAction, EmitEvent
 from launch_ros.actions import Node
+from launch.events import Shutdown
 
 def generate_launch_description():
-    # ── your hard-coded paths ───────────────────────────────────────────────
-    world_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/worlds/nav1.world'
-    robot_file = '/home/vincentzr/ros2_ws/src/ref_pomdp_neurips23/simulator/robots/turtlebot3_burger/model.sdf'
+    # Edit here to change the world and robot model
+    world_file = '/path_to/ros2_ws/src/ref_pomdp_neurips23/simulator/worlds/nav1.world'
+    robot_file = '/path_to/ros2_ws/src/ref_pomdp_neurips23/simulator/robots/turtlebot3_burger/model.sdf'
     robot_name = 'turtlebot'
 
-    # ── disable online model database to speed up loading ────────────────────
-    env = os.environ.copy()
-    env['GAZEBO_MODEL_DATABASE_URI'] = ''
-
-    # 1) start the Gazebo server (with ROS‐2 plugins) via gzserver
+    # Start the Gazebo server 
     gzserver = ExecuteProcess(
         cmd=[
             'gzserver',
@@ -24,17 +20,15 @@ def generate_launch_description():
             '-s', 'libgazebo_ros_factory.so'
         ],
         output='screen',
-        additional_env=env
     )
 
-    # 2) start the GUI
+    # Start the GUI
     gzclient = ExecuteProcess(
         cmd=['gzclient'],
         output='screen',
-        additional_env=env
     )
 
-    # 3) after a short pause, spawn the robot via ros2 run (avoids the logger bug)
+    # Spawn Robot in Gazebo
     spawn_robot = TimerAction(
         period=3.0,
         actions=[
@@ -43,20 +37,21 @@ def generate_launch_description():
                     'ros2', 'run', 'gazebo_ros', 'spawn_entity.py',
                     '-entity', robot_name,
                     '-file',   robot_file,
-                    '-x', '1', '-y', '1', '-z', '0', '-Y', '0'
+                    # Edit here to change the position and orientation of the robot
+                    '-x', '6', '-y', '-9', '-z', '0', '-Y', '1.5708'
                 ],
                 output='screen',
-                additional_env=env
             )
         ]
     )
 
-    # 4) finally, your POMDP solver node
+    # Launch the REFSOLVER node
     ref_solver = Node(
         package='ref_pomdp_neurips23',
         executable='ref_solver_node',
         name='ref_solver_node',
-        output='screen'
+        output='screen',
+        on_exit=[EmitEvent(event=Shutdown())]
     )
 
     return LaunchDescription([

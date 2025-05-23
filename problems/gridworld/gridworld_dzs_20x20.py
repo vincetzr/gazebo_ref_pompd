@@ -86,7 +86,7 @@ def main(trials_count):
 
     # ***** BENCHMARK PARAMETERS *****
     simulations = 3000
-    planning_time = 5
+    planning_time = 30
     trials = trials_count
     nsteps = grid_map.n * 6
     discount_factor = 0.99
@@ -233,10 +233,10 @@ def main(trials_count):
     #                               nsteps=nsteps,
     #                               discount_factor=discount_factor)
 
-    results_3 = benchmark_planner(gridworld, pomcp_a_star,
-                                  trials=trials,
-                                  nsteps=nsteps,
-                                  discount_factor=discount_factor)
+    #results_3 = benchmark_planner(gridworld, pomcp_a_star,
+    #                              trials=trials,
+    #                              nsteps=nsteps,
+    #                              discount_factor=discount_factor)
 
     print("\n\n***** RESULTS *****\n")
 
@@ -248,9 +248,9 @@ def main(trials_count):
     # for i, v in results_2.items():
     #     print(i + ":", v)
 
-    print("\nResults POMCP (A* rollout):")
-    for i, v in results_3.items():
-        print(i + ":", v)
+    #print("\nResults POMCP (A* rollout):")
+    #for i, v in results_3.items():
+    #    print(i + ":", v)
 
     print("\n\nPreprocessing time fully observed policy:", stop - start, "\n")
 

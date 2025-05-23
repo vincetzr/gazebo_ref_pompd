@@ -30,3 +30,15 @@ python problems/gridworld/gridworld_dzs_60x60.py
 
 ## Note:
 Tested on Python 3.10
+
+How to run simulation
+
+```bash
+# Linux
+cd your_ros2_directory
+colcon build
+ros2 launch ref_pomdp_neurips23 launch.py
+```
+
+## Note:
+Tested on Gazebo, ROS 2 Humble Hawksbill and Ubuntu 22.04.5 LTS

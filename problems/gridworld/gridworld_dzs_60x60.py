@@ -13,13 +13,35 @@ def main(trials_count):
     scale_param = 3
     # ***** SMALL GRID MAP *****
     n, m = 20, 20
-    obstacles = [] \
+    obstacles = [(2, i) for i in range(1, 4)] \
+                + [(2, i) for i in range(6, 13)] \
+                + [(2, i) for i in range(15, 19)] \
+                + [(8, i) for i in range(1, 4)] \
+                + [(10, i) for i in range(6, 13)] \
+                + [(10, i) for i in range(15, 19)] \
+                + [(14, i) for i in range(1, 7)] \
+                + [(14, i) for i in range(11, 21)] \
+                + [(j, 3) for j in range(2, 4)] \
+                + [(j, 3) for j in range(5, 11)] \
+                + [(j, 3) for j in range(12, 15)] \
+                + [(j, 8) for j in range(14, 21)] \
+                + [(j, 11) for j in range(14, 17)] \
+                + [(j, 11) for j in range(19, 21)] \
+                + [(j, 12) for j in range(2, 10)] \
+                + [(j, 15) for j in range(2, 10)] \
+                + [(j, 18) for j in range(2, 4)] \
+                + [(j, 18) for j in range(5, 10)] \
 
-    landmarks = []
+    landmarks = [(15 + i, 12 + j) for i in range(3) for j in range(2)] \
+                + [(18 + i, 6 + j) for i in range(3) for j in range(2)] \
+                + [(12, 8), (3, 19), (1, 17), (1, 20), (10, 19), (13, 20), (10, 13), (11, 15)] \
+                + [(14, 10), (18, 10)]
 
-    danger_zones = []
+    danger_zones = [(20, 9), (20, 10)] \
+                   + [(6 + i, 19) for i in range(3)] \
+                   + [(4 + i, 4 + j) for i in range(6) for j in range(2)]
 
-    goals = [(16, 12)]
+    goals = [(16, 12), (19, 7)]
     grid_map = GridMap(n, m, obstacles, landmarks, danger_zones, goals)
 
     grid_map = grid_map.scale(scale_param, scale_param)
@@ -175,10 +197,10 @@ def main(trials_count):
                                   nsteps=nsteps,
                                   discount_factor=discount_factor)
 
-    results_3 = benchmark_planner(gridworld, pomcp_a_star,
-                                  trials=trials,
-                                  nsteps=nsteps,
-                                  discount_factor=discount_factor)
+    #results_3 = benchmark_planner(gridworld, pomcp_a_star,
+    #                              trials=trials,
+    #                              nsteps=nsteps,
+    #                              discount_factor=discount_factor)
 
     print("\n\n***** RESULTS *****\n")
 
@@ -186,9 +208,9 @@ def main(trials_count):
     for i, v in results_1.items():
         print(i + ":", v)
 
-    print("\nResults POMCP (A* rollout):")
-    for i, v in results_3.items():
-        print(i + ":", v)
+    #print("\nResults POMCP (A* rollout):")
+    #for i, v in results_3.items():
+        #print(i + ":", v)
 
     print("\n\nPreprocessing time fully observed policy:", stop - start, "\n")
 
